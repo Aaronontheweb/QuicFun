@@ -597,5 +597,5 @@ internal sealed class QuicWriterActor : ReceiveActor, IWithTimers
         }
     }
 
-    public ITimerScheduler Timers { get; set; }
+    public ITimerScheduler? Timers { get; set; }
 }
