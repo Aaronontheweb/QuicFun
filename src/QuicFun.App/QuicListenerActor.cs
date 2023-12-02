@@ -2,6 +2,7 @@
 using System.Buffers.Binary;
 using System.Net;
 using System.Net.Quic;
+using System.Net.Security;
 using System.Text;
 
 namespace QuicFun.App;
@@ -153,7 +154,11 @@ public class QuicListenerActor : ReceiveActor, IWithStash
         {
             ListenEndPoint = serverEndpoint,
             ConnectionOptionsCallback = (_, _, _) =>
-                new ValueTask<QuicServerConnectionOptions>(_serverConnectionOptions)
+                new ValueTask<QuicServerConnectionOptions>(_serverConnectionOptions),
+            ApplicationProtocols = new List<SslApplicationProtocol>
+            {
+                new("quicfun")
+            }
         };
 
         WaitingForBinding();
@@ -164,7 +169,7 @@ public class QuicListenerActor : ReceiveActor, IWithStash
         Receive<QuicListenerBound>(bound =>
         {
             _listener = bound.Listener;
-            _log.Info("QuicListener bound to {Endpoint}", _listener.LocalEndPoint);
+            _log.Info("QuicListener bound to {0}", _listener.LocalEndPoint);
             Become(Listening);
             Stash.UnstashAll();
             Self.Tell(AcceptConnections.Instance);
