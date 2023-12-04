@@ -66,7 +66,9 @@ public sealed class QuicReaderActor : ReceiveActor, IWithTimers
         {
             if (_stream.CanRead)
             {
-                
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                AttemptRead();
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
             }
             else
             {
@@ -74,11 +76,28 @@ public sealed class QuicReaderActor : ReceiveActor, IWithTimers
                 EnsureReadTimer();
             }
         });
+        
+        Receive<ReadFailed>(failed =>
+        {
+            _log.Error(failed.Exception, "Error while reading from QUIC stream");
+            Context.Stop(Self);
+        });
+        
+        Receive<ReadClosed>(_ =>
+        {
+            _log.Info("Reads closed - closing stream.");
+            Context.Stop(Self);
+        });
+    }
+
+    protected override void PostStop()
+    {
+        _stream.Dispose();
     }
 
     public ITimerScheduler Timers { get; set; }
     
-    private async ValueTask AttemptRead(IMemoryOwner<byte> previousMsgs)
+    private async ValueTask AttemptRead()
     {
         // we go with smaller buffers here, because we don't want to greedily read everything
         try
@@ -93,15 +112,27 @@ public sealed class QuicReaderActor : ReceiveActor, IWithTimers
             }
             
             // decode messages in the buffer using the frame length encoding scheme we developed previously
-            var newMemory = new Memory<byte>()
+            var (msgs, remaining) = DecodeBufferedMessages(buffer.Memory[..read]);
+
+            if (remaining?.Memory.Length > 0)
+            {
+                // partial message, we need to buffer it
+                _log.Warning("Partial message received - additional {0} bytes", remaining.Memory.Length);
+            }
+            
+            // echo server functionality
+            foreach (var msg in msgs)
+            {
+                Context.Parent.Tell(msg);
+            }
         }
         catch (Exception ex)
         {
-            
+            Self.Tell(new ReadFailed(ex));
         }
     }
     
-    private (IReadOnlyList<QuicNetworkProtocol.WriteMsg> msgs, IMemoryOwner<byte>? remaining) DecodeBufferedMessages(ReadOnlyMemory<byte> buffer)
+    private static (IReadOnlyList<QuicNetworkProtocol.WriteMsg> msgs, IMemoryOwner<byte>? remaining) DecodeBufferedMessages(ReadOnlyMemory<byte> buffer)
     {
         var span = buffer.Span;
         var msgs = new List<QuicNetworkProtocol.WriteMsg>();
@@ -122,10 +153,11 @@ public sealed class QuicReaderActor : ReceiveActor, IWithTimers
         if (span.Length > 0)
         {
             var newBuffer = MemoryPool<byte>.Shared.Rent(span.Length);
-            
+            span.CopyTo(newBuffer.Memory.Span);
+            return (msgs, newBuffer);
         }
 
-        return (msgs, buffer);
+        return (msgs, null);
     }
     
     private void EnsureReadTimer()

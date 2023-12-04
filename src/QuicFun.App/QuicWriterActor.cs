@@ -13,6 +13,7 @@ internal sealed class QuicWriterActor : ReceiveActor, IWithTimers
 {
     private readonly QuicStream _stream;
     private readonly ILoggingAdapter _log = Context.GetLogger();
+    private IActorRef _streamReaderActor;
 
     public const int DoubleSize = 8; // doubles take 8 bytes
     public const int FrameLength = 4; // frames are 4 bytes
@@ -259,6 +260,9 @@ internal sealed class QuicWriterActor : ReceiveActor, IWithTimers
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
         HandleWriteClosed();
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+        
+        // we need to start reading from the stream
+        _streamReaderActor = Context.ActorOf(Props.Create(() => new QuicReaderActor(_stream)), "stream-reader");
         
         async Task HandleWriteClosed()
         {
