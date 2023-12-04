@@ -125,6 +125,12 @@ internal sealed class QuicWriterActor : ReceiveActor, IWithTimers
             AttemptToWriteBufferedMessages();
         });
         
+        Receive<CloseStream>(_ =>
+        {
+            _stream.CompleteWrites();
+            _log.Info("Closing QUIC stream for writing.");
+        });
+        
         Receive<StreamClosed>(_ =>
         {
             _log.Info("Stream is closed for writing.");
@@ -176,7 +182,7 @@ internal sealed class QuicWriterActor : ReceiveActor, IWithTimers
     }
 
     /// <summary>
-    /// Method is going to mutate the queue, so it's not thread safe.
+    /// Method is going to mutate the queue, so it's not thread safe.`
     /// </summary>
     /// <param name="msgs">Unprocessed messages</param>
     /// <param name="pool"></param>
@@ -263,7 +269,9 @@ internal sealed class QuicWriterActor : ReceiveActor, IWithTimers
         
         // we need to start reading from the stream
         _streamReaderActor = Context.ActorOf(Props.Create(() => new QuicReaderActor(_stream)), "stream-reader");
-        
+        Context.WatchWith(_streamReaderActor, CloseStream.Instance); // if reads shut down, close the write side too
+        return;
+
         async Task HandleWriteClosed()
         {
             var self = Self;
@@ -280,6 +288,12 @@ internal sealed class QuicWriterActor : ReceiveActor, IWithTimers
                 self.Tell(StreamClosed.Instance);
             }
         }
+    }
+    
+    protected override void PostStop()
+    {
+        _stream.CompleteWrites();
+        _stream.Dispose();
     }
 
     public ITimerScheduler Timers { get; set; }

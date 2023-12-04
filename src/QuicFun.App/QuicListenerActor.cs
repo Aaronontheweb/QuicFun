@@ -1,6 +1,8 @@
-﻿using System.Net;
+﻿using System.Buffers.Binary;
+using System.Net;
 using System.Net.Quic;
 using System.Net.Security;
+using Akka.Util;
 
 namespace QuicFun.App;
 
@@ -321,20 +323,56 @@ public class QuicListenerActor : ReceiveActor, IWithStash
     public IStash Stash { get; set; }
 }
 
-internal class QuicConnectionActor : UntypedActor
+internal class QuicConnectionActor : ReceiveActor
 {
     private readonly int _maxConcurrentStreams;
     private readonly QuicConnection _acceptedConnection;
     private readonly CancellationTokenSource _terminationCts = new();
 
+    private readonly Dictionary<long, IActorRef> _streamActors = new();
+
     public QuicConnectionActor(QuicConnection acceptedConnection, int maxConcurrentStreams)
     {
         _maxConcurrentStreams = maxConcurrentStreams;
         _acceptedConnection = acceptedConnection;
+
+        Accepting();
     }
 
-    protected override void OnReceive(object message)
+    private void Accepting()
     {
-        throw new NotImplementedException();
+        Receive<QuicStream>(stream =>
+        {
+            var streamActor = Context.ActorOf(Props.Create(() => new QuicWriterActor(stream)), $"stream-{stream.Id}");
+            Context.WatchWith(streamActor, new StreamClosed(stream.Id));
+            _streamActors.Add(stream.Id, streamActor);
+        });
+        
+        Receive<QuicNetworkProtocol.WriteMsg>(write =>
+        {
+            // Murmur3 hash of the destination IActorRef
+            var streamId = write.Destination;
+            
+            // stackalloc a byte array large enough to contain a long integer and assign it to a Span<byte>
+            Span<byte> dest = stackalloc new byte[8];
+            BinaryPrimitives.
+            MurmurHash.ByteHash()
+        }
+
+
+    protected override void PreStart()
+    {
+        // begin accepting inbound streams
+        _acceptedConnection.AcceptInboundStreamAsync(_terminationCts.Token).PipeTo(Self);
+    }
+
+    private sealed class StreamClosed
+    {
+        public StreamClosed(long streamId)
+        {
+            StreamId = streamId;
+        }
+
+        public long StreamId { get; }
     }
 }

@@ -120,6 +120,9 @@ public sealed class QuicReaderActor : ReceiveActor, IWithTimers
                 _log.Warning("Partial message received - additional {0} bytes", remaining.Memory.Length);
             }
             
+            // work on next read
+            Self.Tell(DoRead.Instance);
+            
             // echo server functionality
             foreach (var msg in msgs)
             {
@@ -170,6 +173,7 @@ public sealed class QuicReaderActor : ReceiveActor, IWithTimers
     
     protected override void PreStart()
     {
+        // start the read loop
         Self.Tell(DoRead.Instance);
         
         var self = Self;
