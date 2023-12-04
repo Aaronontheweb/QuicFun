@@ -2,6 +2,10 @@
 
 Lightweight experiments working with the QUIC protocol via .NET 8's [System.Net.Quic APIs](https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/quic/quic-overview) using [Akka.NET actors](https://getakka.net/) to build a responsive, concurrent Quic server that can handle dynamic multi-plexing initiated by clients.
 
+## Motiviation
+
+Quic is a reliable, stream-oriented messaging protocol built on top of UDP that eliminates some of the pain caused by TCP, namely head-of-line blocking. It powers HTTP/3, but it can also be used to be build custom networking protocols that can leverage multiplexing for greater total throughput.
+
 ## Current Status
 
 * Building a basic echo protocol server **not working yet, still coding**;
