@@ -347,17 +347,18 @@ internal class QuicConnectionActor : ReceiveActor
             Context.WatchWith(streamActor, new StreamClosed(stream.Id));
             _streamActors.Add(stream.Id, streamActor);
         });
-        
+
         Receive<QuicNetworkProtocol.WriteMsg>(write =>
         {
             // Murmur3 hash of the destination IActorRef
             var streamId = write.Destination;
-            
+
             // stackalloc a byte array large enough to contain a long integer and assign it to a Span<byte>
-            Span<byte> dest = stackalloc new byte[8];
-            BinaryPrimitives.
-            MurmurHash.ByteHash()
-        }
+            // Span<byte> dest = stackalloc new byte[8];
+            // BinaryPrimitives.
+            // MurmurHash.ByteHash()
+        });
+    }
 
 
     protected override void PreStart()

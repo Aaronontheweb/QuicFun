@@ -13,6 +13,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{FF6E38A4
 		nuget.config = nuget.config
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "client-server", "client-server", "{4143F702-8451-4B37-B9CF-891BABC63BBF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "simple", "simple", "{7536776C-4225-443E-AF59-C7DBDA39273E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleQuic.Client", "src\SimpleQuic.Client\SimpleQuic.Client.csproj", "{D1E36AC3-38D2-4037-8D42-4FB424A94F2B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,5 +32,13 @@ Global
 		{EDFEA62C-AF53-4056-A2F2-E37CEA04B24A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EDFEA62C-AF53-4056-A2F2-E37CEA04B24A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EDFEA62C-AF53-4056-A2F2-E37CEA04B24A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D1E36AC3-38D2-4037-8D42-4FB424A94F2B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D1E36AC3-38D2-4037-8D42-4FB424A94F2B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D1E36AC3-38D2-4037-8D42-4FB424A94F2B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D1E36AC3-38D2-4037-8D42-4FB424A94F2B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{EDFEA62C-AF53-4056-A2F2-E37CEA04B24A} = {4143F702-8451-4B37-B9CF-891BABC63BBF}
+		{D1E36AC3-38D2-4037-8D42-4FB424A94F2B} = {7536776C-4225-443E-AF59-C7DBDA39273E}
 	EndGlobalSection
 EndGlobal
