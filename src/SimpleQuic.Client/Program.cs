@@ -9,18 +9,22 @@ using Microsoft.VisualBasic;
 
 var quicConnection = await QuicConnection.ConnectAsync(new QuicClientConnectionOptions()
 {
-    DefaultStreamErrorCode = 0x100,
+    DefaultCloseErrorCode = 0x0B,
+    DefaultStreamErrorCode = 0x0A,
     IdleTimeout = TimeSpan.FromSeconds(10),
     MaxInboundBidirectionalStreams = 10,
-    RemoteEndPoint = new IPEndPoint(IPAddress.Any, 45505),
+    RemoteEndPoint = new IPEndPoint(IPAddress.Loopback, 45505),
     ClientAuthenticationOptions = new SslClientAuthenticationOptions()
     {
         ApplicationProtocols = new List<SslApplicationProtocol>()
         {
             new SslApplicationProtocol("simplequic")
-        }
+        },
+        C
     }
 });
+
+Console.WriteLine($"QUIC-Client: Connected to {quicConnection.RemoteEndPoint} via {quicConnection.LocalEndPoint}");
 
 const int MAX_ITEMS = 10_000;
 List<Task> CloseOps = new List<Task>();
