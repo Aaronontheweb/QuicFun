@@ -17,7 +17,14 @@ var quicListener = await QuicListener.ListenAsync(new QuicListenerOptions()
             DefaultCloseErrorCode = 0x0B,
             DefaultStreamErrorCode = 0x0A,
             IdleTimeout = TimeSpan.FromSeconds(10),
-            MaxInboundBidirectionalStreams = 10
+            MaxInboundBidirectionalStreams = 10,
+            ServerAuthenticationOptions = new SslServerAuthenticationOptions()
+            {
+                ApplicationProtocols = new List<SslApplicationProtocol>()
+                {
+                  new SslApplicationProtocol("simplequic")   
+                }
+            }
         })
 });
 

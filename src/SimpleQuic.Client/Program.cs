@@ -20,7 +20,6 @@ var quicConnection = await QuicConnection.ConnectAsync(new QuicClientConnectionO
         {
             new SslApplicationProtocol("simplequic")
         },
-        C
     }
 });
 
